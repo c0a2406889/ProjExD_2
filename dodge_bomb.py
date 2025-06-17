@@ -59,7 +59,7 @@ def gameover(screen: pg.Surface):
     gg_img = pg.Surface((1100,650))
     gg_img.set_alpha(100)
     fonto = pg.font.Font(None,80)
-    gg_txt = fonto.render("GAME OVER", True, (255, 255, 255))
+    gg_txt = fonto.render("Game Over", True, (255, 255, 255))
     gg_txt_rect = gg_txt.get_rect()
     gg_txt_rect.center = (WIDTH/2,HEIGHT/2)
     naki_kk = pg.image.load("fig/8.png")
@@ -78,9 +78,9 @@ def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")    
-    kk_img_base = pg.image.load("fig/3.png")  # ← 基本画像として保持
+    kk_img_base = pg.image.load("fig/3.png")  
     sum_mv = [0, 0]
-    kk_img = get_kk_img(kk_img_base, (0, 0))  # 初期状態
+    kk_img = get_kk_img(kk_img_base, (0, 0))  
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
 
@@ -109,12 +109,10 @@ def main():
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]
 
-        # 新しい位置に基づいて変形
         new_center = (kk_rct.centerx + sum_mv[0], kk_rct.centery + sum_mv[1])
         new_img = get_kk_img(kk_img_base, tuple(sum_mv))
         new_rct = new_img.get_rect(center=new_center)
 
-        # 画面内なら更新
         if check_boud(new_rct) == (True, True):
             kk_img = new_img
             kk_rct = new_rct
