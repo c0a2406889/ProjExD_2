@@ -6,6 +6,21 @@ import random
 
 WIDTH, HEIGHT = 1100, 650
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+DELTA: dict = {pg.K_UP:[0,-5],pg.K_DOWN:[0,5],pg.K_LEFT:[-5,0],pg.K_RIGHT:[5,0]}
+
+
+def check_boud(rct: pg.Rect):
+    """
+    引数：こうかとんRectまたは爆弾Rect
+    戻り値：横方向、縦方向の画面内が判定結果
+    画面内ならTrue,画面外ならFalse
+    """
+    yoko, tate = True, True
+    if rct.left < 0 or WIDTH < rct.right:
+        yoko = False
+    if rct.top < 0 or HEIGHT < rct.bottom:
+        tate = False
+    return yoko,tate
 
 
 def main():
@@ -25,7 +40,7 @@ def main():
     clock = pg.time.Clock()
     tmr = 0
 
-    DELTA: dict = {pg.K_UP:(0,-5),pg.K_DOWN:(0,5),pg.K_LEFT:(-5,0),pg.K_RIGHT:(5,0)}
+    
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
@@ -36,10 +51,15 @@ def main():
         for key,mv in DELTA.items():
             if key_lst[key]:
                 sum_mv[0] = mv[0]
-                sum_mv[1] = mv[1] 
+                sum_mv[1] = mv[1]
         kk_rct.move_ip(sum_mv)
+        if check_boud(kk_rct) != (True,True):
+            kk_rct.move_ip(-sum_mv[0],-sum_mv[1])
         screen.blit(kk_img, kk_rct)
         bb_rct.move_ip(vx,vy)
+        yoko,tate = check_boud(bb_rct)
+        if not yoko:
+            vx *= -1
         screen.blit(bb_img,bb_rct)
         pg.display.update()
         tmr += 1
