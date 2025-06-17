@@ -7,12 +7,28 @@ import time
 
 WIDTH, HEIGHT = 1100, 650
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-DELTA: dict = {pg.K_UP:[0,-5],pg.K_DOWN:[0,5],pg.K_LEFT:[-5,0],pg.K_RIGHT:[5,0]}
-ALPHA: dict = {(-5,-5):[0.25,0.09]}
-KK_IMGS = {}
+DELTA: dict = {pg.K_UP:[0,-5],
+               pg.K_DOWN:[0,5],
+               pg.K_LEFT:[-5,0],
+               pg.K_RIGHT:[5,0]
+}
 
-def get_kk_img(sum_mv: tuple[int,int]):
-    return pg.transform.rotozoom(pg.image.load("fig/3.png"), ALPHA[sum_mv])
+ALPHA: dict = {
+    (0,0):[90,0],
+    (0,5):[180,0.9],
+    (5,5):[135,0.9],
+    (5,0):[90,0.9],
+    (5,-5):[45,0.9],
+    (0,-5):[0,0.9],
+    (-5,-5):[325,0.9],
+    (-5,0):[280,0.9],
+    (-5,5):[235,0.9],
+}
+
+
+def get_kk_img(kk_img ,sum_mv: tuple[int,int]):
+    angle, scale = ALPHA.get(sum_mv, [90, 0.9])
+    return pg.transform.rotozoom(kk_img,angle,scale)
 
 def check_boud(rct: pg.Rect):
     """
@@ -36,7 +52,6 @@ def init_bb_imgs():
         pg.draw.circle(bb_img,(255,0,0),(10*r,10*r),10*r)
         bb_img.set_colorkey((0,0,0))
         bb_imgs.append(bb_img)
-    
     return bb_imgs,bb_accs
 
 
@@ -63,52 +78,64 @@ def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")    
-    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
+    kk_img_base = pg.image.load("fig/3.png")  # ← 基本画像として保持
+    sum_mv = [0, 0]
+    kk_img = get_kk_img(kk_img_base, (0, 0))  # 初期状態
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
+
     bb_img = pg.Surface((20,20))
     pg.draw.circle(bb_img, (255,0,0), (10,10), 10)
     bb_img.set_colorkey((0,0,0))
     bb_rct = bb_img.get_rect()
-    bb_rct.centerx = random.randint(0,WIDTH)
-    bb_rct.centery = random.randint(0,HEIGHT)
+    bb_rct.centerx = random.randint(0, WIDTH)
+    bb_rct.centery = random.randint(0, HEIGHT)
+
     vx, vy = +5, +5
     clock = pg.time.Clock()
     tmr = 0
     bb_imgs, bb_speed = init_bb_imgs()
-
-    
+        
     while True:
-        avx = bb_speed[min(tmr//500,9)]
-        bb_img = bb_imgs[min(tmr//500,9)]
+        sum_mv = [0, 0]
+
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
-        if kk_rct.colliderect(bb_rct):
-            gameover(screen)
-            return
-        screen.blit(bg_img, [0, 0]) 
+            
         key_lst = pg.key.get_pressed()
-        sum_mv = [0, 0]
-        for key,mv in DELTA.items():
+        for key, mv in DELTA.items():
             if key_lst[key]:
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]
 
-        kk_rct.move_ip(sum_mv)
-        if check_boud(kk_rct) != (True,True):
-            kk_rct.move_ip(-sum_mv[0],-sum_mv[1])
+        # 新しい位置に基づいて変形
+        new_center = (kk_rct.centerx + sum_mv[0], kk_rct.centery + sum_mv[1])
+        new_img = get_kk_img(kk_img_base, tuple(sum_mv))
+        new_rct = new_img.get_rect(center=new_center)
+
+        # 画面内なら更新
+        if check_boud(new_rct) == (True, True):
+            kk_img = new_img
+            kk_rct = new_rct
+
+        if kk_rct.colliderect(bb_rct):
+            gameover(screen)
+            return
+        
+        screen.blit(bg_img, [0, 0]) 
         screen.blit(kk_img, kk_rct)
-        bb_rct.move_ip(vx*avx,vy*avx)
-        yoko,tate = check_boud(bb_rct)
+
+        avx = bb_speed[min(tmr//500, 9)]
+        bb_img = bb_imgs[min(tmr//500, 9)]
+        bb_rct.move_ip(vx*avx, vy*avx)
+        yoko, tate = check_boud(bb_rct)
         if not yoko:
             vx *= -1
         if not tate:
             vy *= -1
-        screen.blit(bb_img,bb_rct)
-        bb_rct.width = bb_img.get_rect().width
-        bb_rct.height = bb_img.get_rect().height
-        print(bb_img.get_rect())
+        screen.blit(bb_img, bb_rct)
+                
         pg.display.update()
         tmr += 1
         clock.tick(50)
