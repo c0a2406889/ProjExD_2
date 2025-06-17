@@ -45,6 +45,9 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
+        if kk_rct.colliderect(bb_rct):
+            print("gameover")
+            return 
         screen.blit(bg_img, [0, 0]) 
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
@@ -60,6 +63,8 @@ def main():
         yoko,tate = check_boud(bb_rct)
         if not yoko:
             vx *= -1
+        if not tate:
+            vy *= -1
         screen.blit(bb_img,bb_rct)
         pg.display.update()
         tmr += 1
