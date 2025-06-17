@@ -2,6 +2,7 @@ import os
 import sys
 import pygame as pg
 import random
+import time
 
 
 WIDTH, HEIGHT = 1100, 650
@@ -23,6 +24,35 @@ def check_boud(rct: pg.Rect):
     return yoko,tate
 
 
+def init_bb_imgs():
+    bb_accs = [a for a in range(1,11)]
+    bb_imgs = []
+    for r in range(1,11):
+        bb_img = pg.Surface((20*r,20*r))
+        pg.draw.circle(bb_img,(255,0,0),(10*r,10*r),10*r)
+        bb_imgs.append(bb_img)
+    
+    return bb_imgs,bb_accs
+
+
+def gameover(screen: pg.Surface):
+    gg_img = pg.Surface((1100,650))
+    gg_img.set_alpha(100)
+    fonto = pg.font.Font(None,80)
+    gg_txt = fonto.render("GAME OVER", True, (255, 255, 255))
+    gg_txt_rect = gg_txt.get_rect()
+    gg_txt_rect.center = (WIDTH/2,HEIGHT/2)
+    naki_kk = pg.image.load("fig/8.png")
+    naki_kk_rect1 = naki_kk.get_rect(center=(350, HEIGHT / 2))
+    naki_kk_rect2 = naki_kk.get_rect(center=(750, HEIGHT / 2))
+    pg.draw.rect(gg_img,(0,0,0),pg.Rect(0,0,1100,650))
+    screen.blit(gg_img,(0,0))
+    screen.blit(naki_kk,naki_kk_rect1)
+    screen.blit(gg_txt,gg_txt_rect)
+    screen.blit(naki_kk,naki_kk_rect2)
+    pg.display.update()
+    time.sleep(5)
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -36,6 +66,7 @@ def main():
     bb_rct = bb_img.get_rect()
     bb_rct.centerx = random.randint(0,WIDTH)
     bb_rct.centery = random.randint(0,HEIGHT)
+    bb_imgs, bb_speed = init_bb_imgs
     vx, vy = +5, +5
     clock = pg.time.Clock()
     tmr = 0
@@ -46,8 +77,8 @@ def main():
             if event.type == pg.QUIT: 
                 return
         if kk_rct.colliderect(bb_rct):
-            print("gameover")
-            return 
+            gameover(screen)
+            return
         screen.blit(bg_img, [0, 0]) 
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
@@ -69,6 +100,10 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        if tmr == 10:
+            vx = vx*bb_speed[min(tmr//500,9)]
+            bb_img = bb_imgs[min(tmr//500,9)]
+        init_bb_imgs
 
 
 if __name__ == "__main__":
